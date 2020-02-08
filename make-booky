@@ -1,0 +1,34 @@
+#!/bin/bash
+# requirements: ghostscript, imagemagick, tiff2pdf (libtiff-tools)
+cwd="$PWD"
+input="$1"
+filename="$(basename "$input")"
+tmpdir="/tmp/make-booky-$RANDOM"
+mkdir $tmpdir
+cp "$input" "$tmpdir"
+cd $tmpdir || exit 1
+ghostscript -sDEVICE=jpeg -r256 -o page-%d.jpeg "$filename"
+rm "$filename"
+number_of_pages="$(($(find . | wc -l) - 1))"
+
+# if number_of_pages is odd
+if ((number_of_pages % 2)); then
+	echo "making page 1 a loose leaf"
+	convert page-1.jpeg bind-0.tiff
+	for i in $(seq 2 $((number_of_pages))); do
+		mv page-"$i".jpeg page-"$((i - 1)).jpeg"
+	done
+	number_of_pages=$((number_of_pages - 1))
+fi
+
+end=$((number_of_pages / 2))
+
+for i in $(seq 0 $((end - 1))); do
+	page=$((i + 1))
+	echo "binding page $page"
+	convert "page-$page.jpeg" "page-$((number_of_pages - i)).jpeg" +append "bind-$page.tiff"
+done
+
+tiffcp bind-*.tiff bound.tiff
+tiff2pdf -o "$filename.booky.pdf" bound.tiff
+cp "$filename.booky.pdf" "$cwd"
