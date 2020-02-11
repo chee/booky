@@ -7,7 +7,7 @@ tmpdir="/tmp/make-booky-$RANDOM"
 mkdir $tmpdir
 cp "$input" "$tmpdir"
 cd $tmpdir || exit 1
-ghostscript -sDEVICE=jpeg -r256 -o page-%d.jpeg "$filename"
+ghostscript -sDEVICE=jpeg -r512 -o page-%d.jpeg "$filename"
 rm "$filename"
 number_of_pages="$(($(find . | wc -l) - 1))"
 
